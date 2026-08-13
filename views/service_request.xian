@@ -633,6 +633,7 @@
             try {
                 const response = await fetch('/api/request', {
                     method: 'POST',
+                    credentials: 'include',
                     body: formDataToSend
                 });
 
@@ -641,6 +642,9 @@
                 if (result.success) {
                     showAlert('✅ Service request submitted successfully! Redirecting...', 'success');
                     setTimeout(() => { window.location.href = '/my-requests'; }, 2000);
+                } else if (result.redirect) {
+                    showAlert('⚠️ Session expired. Redirecting to login...', 'error');
+                    setTimeout(() => { window.location.href = result.redirect; }, 2000);
                 } else {
                     showAlert('❌ Failed to submit request: ' + (result.error || 'Unknown error'), 'error');
                 }

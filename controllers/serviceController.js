@@ -24,7 +24,7 @@ export const requestFormPage = (req, res) => {
 export const submitRequest = async (req, res) => {
   try {
     if (!req.session.user) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: "Session expired. Please log in again.", redirect: "/login" });
     }
 
     const { serviceType, description, latitude, longitude, address, contactName, contactPhone, priority, barangay } = req.body;
