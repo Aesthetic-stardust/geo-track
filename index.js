@@ -42,6 +42,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), "public")));
 
+app.set('trust proxy', 1); // Trust Render's proxy
+
 app.use(session({
   secret: process.env.SESSION_SECRET || "xianfire-secret-key",
   resave: false,
@@ -49,7 +51,8 @@ app.use(session({
   cookie: {
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production" // HTTPS in production
+    secure: process.env.NODE_ENV === "production", // HTTPS in production
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
   }
 }));
 
