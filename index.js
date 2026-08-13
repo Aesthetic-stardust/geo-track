@@ -26,13 +26,11 @@
 import express from "express";
 import path from "path";
 import session from "express-session";
-import connectSessionSequelize from "connect-session-sequelize";
 import router from "./routes/index.js";
 import fs from 'fs';
 import hbs from "hbs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { sequelize } from "./models/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -44,11 +42,6 @@ if (!fs.existsSync(uploadsDir)) {
   console.log('✅ Created uploads directory');
 }
 
-const SequelizeStore = connectSessionSequelize(session.Store);
-const sessionStore = new SequelizeStore({ db: sequelize });
-// Create session table if it doesn't exist
-sessionStore.sync();
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -56,18 +49,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), "public")));
 
-app.set('trust proxy', 1); // Trust Render's proxy
+app.set('trust proxy', 1);
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "xianfire-secret-key",
-  resave: false,
+  resave: true,
   saveUninitialized: false,
-  store: sessionStore,
   cookie: {
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+    secure: false,
+    sameSite: "lax"
   }
 }));
 
