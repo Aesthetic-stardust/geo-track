@@ -29,6 +29,10 @@ export const submitRequest = async (req, res) => {
 
     const { serviceType, description, latitude, longitude, address, contactName, contactPhone, priority, barangay } = req.body;
     
+    console.log("📥 Submit request from user:", req.session.user.id);
+    console.log("📦 Body:", { serviceType, description, latitude, longitude, priority });
+    console.log("📎 File:", req.file ? req.file.path : "no file");
+
     // Get Cloudinary URL if uploaded
     const attachmentPath = req.file ? req.file.path : null;
 
@@ -36,8 +40,8 @@ export const submitRequest = async (req, res) => {
       userId: req.session.user.id,
       serviceType,
       description,
-      latitude,
-      longitude,
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
       address,
       barangay,
       attachment: attachmentPath,
@@ -49,8 +53,9 @@ export const submitRequest = async (req, res) => {
 
     res.json({ success: true, requestId: request.id });
   } catch (error) {
-    console.error("Error submitting request:", error);
-    res.status(500).json({ error: "Failed to submit request" });
+    console.error("❌ Error submitting request:", error.message);
+    console.error("Stack:", error.stack);
+    res.status(500).json({ error: "Failed to submit request: " + error.message });
   }
 };
 
