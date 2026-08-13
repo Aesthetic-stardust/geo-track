@@ -29,8 +29,8 @@ export const submitRequest = async (req, res) => {
 
     const { serviceType, description, latitude, longitude, address, contactName, contactPhone, priority, barangay } = req.body;
     
-    // Get file path if uploaded
-    const attachmentPath = req.file ? `/uploads/${req.file.filename}` : null;
+    // Get Cloudinary URL if uploaded
+    const attachmentPath = req.file ? req.file.path : null;
 
     const request = await ServiceRequest.create({
       userId: req.session.user.id,

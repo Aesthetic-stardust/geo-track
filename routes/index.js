@@ -26,18 +26,25 @@
     
 import express from "express";
 import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { homePage } from "../controllers/homeController.js";
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './uploads/');
-  },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const ext = file.mimetype.split('/')[1];
-    cb(null, `${timestamp}-${req.session.user?.id}-${Math.random().toString(36).substr(2, 9)}.${ext}`);
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "yjvip1qj",
+  api_key: process.env.CLOUDINARY_API_KEY || "158164443746266",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "CuUqkyrw2v0LpAqeII7hG9-Fye4"
+});
+
+// Configure multer to use Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "geo-track",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp", "mp4", "mov", "webm"],
+    resource_type: "auto"
   }
 });
 
