@@ -26,11 +26,13 @@
 import express from "express";
 import path from "path";
 import session from "express-session";
+import connectSessionSequelize from "connect-session-sequelize";
 import router from "./routes/index.js";
 import fs from 'fs';
 import hbs from "hbs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { sequelize } from "./models/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,6 +43,11 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
   console.log('✅ Created uploads directory');
 }
+
+const SequelizeStore = connectSessionSequelize(session.Store);
+const sessionStore = new SequelizeStore({ db: sequelize });
+// Create session table if it doesn't exist
+sessionStore.sync();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -55,10 +62,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || "xianfire-secret-key",
   resave: false,
   saveUninitialized: false,
+  store: sessionStore,
   cookie: {
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // HTTPS in production
+    secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
   }
 }));
