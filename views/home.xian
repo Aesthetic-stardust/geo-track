@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - Geo-Track</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --navy: #0f2044;
+            --navy-mid: #1a3260;
+            --teal: #0d9488;
+            --teal-light: #14b8a6;
+            --slate-light: #f1f5f9;
+            --white: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--slate-light);
+            min-height: 100vh;
+        }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(160deg, var(--navy) 0%, var(--navy-mid) 60%, #1e4080 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            bottom: -120px;
+            right: -120px;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: rgba(13, 148, 136, 0.1);
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: -80px;
+            left: -80px;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 60px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-brand-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--teal);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .nav-brand-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .nav-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 22px;
+            background: var(--teal);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .nav-cta:hover {
+            background: var(--teal-light);
+            transform: translateY(-1px);
+        }
+
+        .hero-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(13, 148, 136, 0.2);
+            border: 1px solid rgba(13, 148, 136, 0.4);
+            color: var(--teal-light);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        .hero-title {
+            font-size: clamp(2.4rem, 5vw, 3.6rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+        }
+
+        .hero-title span {
+            color: var(--teal-light);
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.75;
+            max-width: 520px;
+            line-height: 1.7;
+            margin-bottom: 44px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-hero-primary {
+            padding: 14px 36px;
+            background: var(--teal);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 24px rgba(13, 148, 136, 0.4);
+        }
+
+        .btn-hero-primary:hover {
+            background: var(--teal-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(13, 148, 136, 0.45);
+        }
+
+        .btn-hero-secondary {
+            padding: 14px 36px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .btn-hero-secondary:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-2px);
+        }
+
+        /* Stats strip */
+        .stats-strip {
+            background: rgba(255, 255, 255, 0.07);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 28px 60px;
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .num {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: var(--teal-light);
+        }
+
+        .stat-item .lbl {
+            font-size: 0.8rem;
+            opacity: 0.65;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 640px) {
+            nav { padding: 16px 24px; }
+            .stats-strip { gap: 30px; padding: 20px 24px; }
+            .hero-content { padding: 40px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <nav>
+            <div class="nav-brand">
+                <div class="nav-brand-icon">🗺️</div>
+                <span class="nav-brand-name">Geo-Track</span>
+            </div>
+            <a href="/login" class="nav-cta">Get Started →</a>
+        </nav>
+
+        <div class="hero-content">
+            <div class="hero-badge">📍 Municipality of Bansud GIS Platform</div>
+            <h1 class="hero-title">Community Service<br><span>Request System</span></h1>
+            <p class="hero-subtitle">Submit, track, and monitor community service requests with precise geographic mapping across all barangays of Bansud, Oriental Mindoro.</p>
+            <div class="hero-actions">
+                <a href="/login" class="btn-hero-primary">Sign In to Your Account</a>
+                <a href="/register" class="btn-hero-secondary">Create Account</a>
+            </div>
+        </div>
+
+        <div class="stats-strip">
+            <div class="stat-item">
+                <div class="num">13</div>
+                <div class="lbl">Barangays Covered</div>
+            </div>
+            <div class="stat-item">
+                <div class="num">8+</div>
+                <div class="lbl">Service Categories</div>
+            </div>
+            <div class="stat-item">
+                <div class="num">24/7</div>
+                <div class="lbl">Request Monitoring</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

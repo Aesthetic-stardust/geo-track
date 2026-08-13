@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --navy: #0f2044;
+            --teal: #0d9488;
+            --teal-light: #14b8a6;
+            --slate-light: #f1f5f9;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--slate-light);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--navy);
+            color: white;
+            padding: 0 40px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            isolation: isolate;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .header-brand span {
+            width: 32px;
+            height: 32px;
+            background: var(--teal);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        nav a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            padding: 7px 14px;
+            border-radius: 7px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        nav a:hover, nav a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        nav a.active {
+            background: var(--teal);
+            color: white;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 36px 24px 60px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .page-header .count-badge {
+            background: var(--teal);
+            color: white;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.825rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .btn-new {
+            padding: 9px 20px;
+            background: var(--teal);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .btn-new:hover {
+            background: var(--teal-light);
+            transform: translateY(-1px);
+        }
+
+        /* Request cards */
+        .request-card {
+            background: white;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            margin-bottom: 18px;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+
+        .request-card:hover {
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+        }
+
+        .card-top {
+            padding: 20px 24px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .card-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+            max-width: 600px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .status-pending   { background: #fef3c7; color: #92400e; }
+        .status-approved  { background: #dbeafe; color: #1e40af; }
+        .status-ongoing   { background: #ede9fe; color: #5b21b6; }
+        .status-completed { background: #dcfce7; color: #15803d; }
+        .status-rejected  { background: #fee2e2; color: #991b1b; }
+
+        .card-meta {
+            padding: 14px 24px;
+            background: var(--slate-light);
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .meta-item {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .meta-item strong {
+            color: var(--text);
+            display: block;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 2px;
+        }
+
+        /* Expandable sections */
+        .card-extra {
+            padding: 18px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .rejection-box {
+            background: #fef2f2;
+            border-left: 3px solid #dc2626;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.875rem;
+            color: #991b1b;
+        }
+
+        .rejection-box strong { display: block; margin-bottom: 4px; }
+
+        .info-box {
+            background: var(--slate-light);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .info-box strong { color: var(--text); }
+
+        .media-preview img,
+        .media-preview video {
+            max-width: 100%;
+            max-height: 360px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            margin-top: 10px;
+        }
+
+        .map-mini {
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+            position: relative;
+            z-index: 0;
+        }
+
+        /* Timeline */
+        .timeline {
+            border-top: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+        }
+
+        .tl-item {
+            flex: 1;
+            position: relative;
+            padding: 0 12px 0 0;
+            min-width: 120px;
+        }
+
+        .tl-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 9px;
+            top: 9px;
+            width: calc(100% - 9px);
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+
+        .tl-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--teal);
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--teal);
+            position: relative;
+            z-index: 1;
+            margin-bottom: 6px;
+        }
+
+        .tl-dot.inactive {
+            background: var(--border);
+            box-shadow: 0 0 0 2px var(--border);
+        }
+
+        .tl-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .tl-date {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Report to dept */
+        .report-box {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            background: #fffbeb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .report-box p {
+            font-size: 0.875rem;
+            color: #92400e;
+        }
+
+        .btn-report {
+            padding: 8px 18px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-report:hover { background: #d97706; }
+
+        /* Empty state */
+        .empty-state {
+            background: white;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            padding: 64px 40px;
+            text-align: center;
+        }
+
+        .empty-icon { font-size: 3rem; margin-bottom: 20px; }
+        .empty-state h2 { font-size: 1.2rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+        .empty-state p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 28px; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 14px;
+            padding: 0;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+
+        .modal-head {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-head h3 { font-size: 1rem; font-weight: 600; color: var(--text); }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            line-height: 1;
+            padding: 2px 6px;
+        }
+
+        .modal-body { padding: 24px; }
+
+        .modal-body .form-group { margin-bottom: 16px; }
+        .modal-body label { font-size: 0.875rem; font-weight: 500; color: var(--text); margin-bottom: 7px; display: block; }
+
+        .modal-body select,
+        .modal-body textarea {
+            width: 100%;
+            padding: 10px 13px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+        }
+
+        .modal-body textarea { min-height: 90px; resize: vertical; }
+
+        .modal-body select:focus,
+        .modal-body textarea:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-modal-submit {
+            flex: 1;
+            padding: 11px;
+            background: var(--teal);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn-modal-submit:hover { background: var(--teal-light); }
+
+        .btn-modal-cancel {
+            flex: 1;
+            padding: 11px;
+            background: var(--slate-light);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn-modal-cancel:hover { background: var(--border); }
+
+        @media (max-width: 480px) {
+            header { padding: 0 16px; }
+            nav a { padding: 6px 10px; font-size: 0.8rem; }
+            .card-top { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-brand">
+            <span>🗺️</span>
+            Geo-Track
+        </div>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/request">New Request</a>
+            <a href="/my-requests" class="active">My Requests</a>
+            <a href="#" onclick="confirmSignOut(event)">Sign Out</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        {{#if requests.length}}
+        <div class="page-header">
+            <h1>My Requests <span class="count-badge">{{requests.length}}</span></h1>
+            <a href="/request" class="btn-new">+ New Request</a>
+        </div>
+
+        {{#each requests}}
+        <div class="request-card">
+            <div class="card-top">
+                <div>
+                    <div class="card-title">{{this.serviceType}}</div>
+                    <div class="card-desc">{{this.description}}</div>
+                </div>
+                <span class="status-badge status-{{this.status}}">{{this.status}}</span>
+            </div>
+
+            <div class="card-meta">
+                <div class="meta-item">
+                    <strong>Submitted</strong>
+                    {{formatDate this.createdAt}}
+                </div>
+                <div class="meta-item">
+                    <strong>Priority</strong>
+                    {{this.priority}}
+                </div>
+                <div class="meta-item">
+                    <strong>Phone</strong>
+                    {{this.contactPhone}}
+                </div>
+                <div class="meta-item">
+                    <strong>Coordinates</strong>
+                    {{this.latitude}}, {{this.longitude}}
+                </div>
+            </div>
+
+            {{#if this.assignedTo}}
+            <div class="card-extra">
+                <div class="info-box"><strong>Assigned to:</strong> {{this.assignedTo}}</div>
+            </div>
+            {{/if}}
+
+            {{#if this.notes}}
+            <div class="card-extra">
+                <div class="info-box"><strong>Admin notes:</strong> {{this.notes}}</div>
+            </div>
+            {{/if}}
+
+            {{#if this.rejectionReason}}
+            <div class="card-extra">
+                <div class="rejection-box">
+                    <strong>❌ Rejection Reason</strong>
+                    {{this.rejectionReason}}
+                </div>
+            </div>
+            {{/if}}
+
+            {{#if this.attachment}}
+            <div class="card-extra">
+                <strong style="font-size: 0.85rem; color: var(--text-muted);">📸 Attached Media</strong>
+                <div class="media-preview">
+                    {{#if (isImage this.attachment)}}
+                    <img src="{{this.attachment}}" alt="Request attachment">
+                    {{else}}
+                    <video controls>
+                        <source src="{{this.attachment}}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    {{/if}}
+                </div>
+            </div>
+            {{/if}}
+
+            <div class="card-extra">
+                <strong style="font-size: 0.85rem; color: var(--text-muted);">📍 Request Location</strong>
+                <div class="map-mini" id="map-{{this.id}}"></div>
+            </div>
+
+            <div class="timeline">
+                <div class="tl-item">
+                    <div class="tl-dot"></div>
+                    <div class="tl-label">Submitted</div>
+                    <div class="tl-date">{{formatDate this.createdAt}}</div>
+                </div>
+                {{#if (ne this.status 'pending')}}
+                <div class="tl-item">
+                    <div class="tl-dot"></div>
+                    <div class="tl-label">{{this.status}}</div>
+                    <div class="tl-date">{{formatDate this.updatedAt}}</div>
+                </div>
+                {{else}}
+                <div class="tl-item">
+                    <div class="tl-dot inactive"></div>
+                    <div class="tl-label" style="color: #94a3b8;">Processing</div>
+                    <div class="tl-date">Pending</div>
+                </div>
+                {{/if}}
+                {{#if this.completedAt}}
+                <div class="tl-item">
+                    <div class="tl-dot"></div>
+                    <div class="tl-label">Completed</div>
+                    <div class="tl-date">{{formatDate this.completedAt}}</div>
+                </div>
+                {{/if}}
+            </div>
+
+            {{#if (eq this.status 'pending')}}
+            <div class="report-box">
+                <p>⏱️ <strong>Request taking too long?</strong> Escalate it to a government department.</p>
+                <button class="btn-report" onclick="openReportModal({{this.id}}, '{{this.serviceType}}')">Report to Department</button>
+            </div>
+            {{/if}}
+        </div>
+        {{/each}}
+
+        {{else}}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h2>No Service Requests Yet</h2>
+            <p>You haven't submitted any requests. Start by reporting an issue in your community.</p>
+            <a href="/request" class="btn-new">+ Submit Your First Request</a>
+        </div>
+        {{/if}}
+    </div>
+
+    <!-- Report Modal -->
+    <div class="modal-overlay" id="reportModal">
+        <div class="modal">
+            <div class="modal-head">
+                <h3>📢 Report to Department</h3>
+                <button class="modal-close" onclick="closeReportModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="departmentCategory">Department Category <span style="color: #dc2626;">*</span></label>
+                    <select id="departmentCategory">
+                        <option value="">Select Category</option>
+                        <option value="Crime & Safety">Crime & Safety</option>
+                        <option value="Agriculture">Agriculture</option>
+                        <option value="Incidents & Disasters">Incidents & Disasters</option>
+                        <option value="Aid & Assistance">Aid & Assistance</option>
+                        <option value="Electrical Issues">Electrical Issues</option>
+                        <option value="Water & Sanitation">Water & Sanitation</option>
+                        <option value="Health & Wellness">Health & Wellness</option>
+                        <option value="Transportation & Infrastructure">Transportation & Infrastructure</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="departmentName">Department</label>
+                    <select id="departmentName">
+                        <option value="">Select Department</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reportReason">Reason for Report</label>
+                    <textarea id="reportReason" placeholder="Explain why this request needs department attention..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal-submit" onclick="submitReport()">Submit Report</button>
+                <button class="btn-modal-cancel" onclick="closeReportModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const requests = {{{json requests}}};
+
+        const departments = {
+            'Crime & Safety': ['PNP', 'BFP', 'BJMP'],
+            'Agriculture': ['DA', 'NIA', 'BFAR'],
+            'Incidents & Disasters': ['NDRRMC', 'PAGASA', 'PHIVOLCS'],
+            'Aid & Assistance': ['DSWD', 'DOH', 'Red Cross'],
+            'Electrical Issues': ['DOE', 'NGCP', 'NEA'],
+            'Water & Sanitation': ['MWSS', 'LGU Water District', 'EMB'],
+            'Health & Wellness': ['DOH', 'LGU Health Center', 'Philippine Red Cross'],
+            'Transportation & Infrastructure': ['DPWH', 'LTO', 'LTFRB']
+        };
+
+        requests.forEach(request => {
+            if (request.latitude && request.longitude) {
+                const mapId = 'map-' + request.id;
+                const mapElement = document.getElementById(mapId);
+
+                if (mapElement) {
+                    const m = L.map(mapId, {
+                        dragging: false, touchZoom: false, scrollWheelZoom: false,
+                        doubleClickZoom: false, boxZoom: false, keyboard: false, zoomControl: false
+                    }).setView([request.latitude, request.longitude], 15);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(m);
+
+                    L.marker([request.latitude, request.longitude]).addTo(m);
+                }
+            }
+        });
+
+        document.getElementById('departmentCategory').addEventListener('change', function() {
+            const category = this.value;
+            const deptSelect = document.getElementById('departmentName');
+            deptSelect.innerHTML = '<option value="">Select Department</option>';
+            if (category && departments[category]) {
+                departments[category].forEach(dept => {
+                    const opt = document.createElement('option');
+                    opt.value = dept;
+                    opt.textContent = dept;
+                    deptSelect.appendChild(opt);
+                });
+            }
+        });
+
+        let currentReportRequestId = null;
+        let currentReportServiceType = null;
+
+        function openReportModal(requestId, serviceType) {
+            currentReportRequestId = requestId;
+            currentReportServiceType = serviceType;
+            document.getElementById('reportReason').value = '';
+            document.getElementById('departmentCategory').value = '';
+            document.getElementById('departmentName').innerHTML = '<option value="">Select Department</option>';
+            document.getElementById('reportModal').classList.add('open');
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.remove('open');
+            currentReportRequestId = null;
+            currentReportServiceType = null;
+        }
+
+        function submitReport() {
+            const category = document.getElementById('departmentCategory').value;
+            const department = document.getElementById('departmentName').value;
+            const reason = document.getElementById('reportReason').value.trim();
+
+            if (!category) { alert('Please select a department category'); return; }
+            if (!department) { alert('Please select a department'); return; }
+            if (!reason) { alert('Please provide a reason'); return; }
+
+            fetch('/api/report-department', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    serviceRequestId: currentReportRequestId,
+                    departmentCategory: category,
+                    department: department,
+                    reason: reason
+                })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    alert('✅ Report submitted successfully!');
+                    closeReportModal();
+                    location.reload();
+                } else {
+                    alert('❌ Failed to submit report');
+                }
+            })
+            .catch(err => alert('Error: ' + err.message));
+        }
+    </script>
+    <!-- Sign Out Confirmation Modal -->
+    <div class="modal-overlay" id="signoutModal">
+        <div class="modal" style="max-width:400px;">
+            <div class="modal-head">
+                <h3>Sign Out</h3>
+                <button class="modal-close" onclick="closeSignOut()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align:center;padding:28px 24px;">
+                <div style="font-size:2.4rem;margin-bottom:14px;">👋</div>
+                <p style="font-size:.975rem;font-weight:600;color:var(--text);margin-bottom:6px;">Are you sure you want to sign out?</p>
+                <p style="font-size:.85rem;color:var(--text-muted);">You will need to sign in again to continue.</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="window.location.href='/logout'" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:600;font-size:.9rem;font-family:inherit;cursor:pointer;">Yes, Sign Out</button>
+                <button class="btn-modal-cancel" onclick="closeSignOut()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmSignOut(e) {
+            e.preventDefault();
+            document.getElementById('signoutModal').classList.add('open');
+        }
+        function closeSignOut() {
+            document.getElementById('signoutModal').classList.remove('open');
+        }
+    </script>
+</body>
+</html>

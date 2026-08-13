@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --navy: #0f2044;
+            --navy-mid: #1a3260;
+            --teal: #0d9488;
+            --teal-light: #14b8a6;
+            --slate-light: #f1f5f9;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --error: #dc2626;
+            --success: #059669;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--slate-light);
+            min-height: 100vh;
+        }
+
+        /* Top nav */
+        header {
+            background: var(--navy);
+            color: white;
+            padding: 0 40px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            isolation: isolate;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .header-brand span {
+            width: 32px;
+            height: 32px;
+            background: var(--teal);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        nav a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            padding: 7px 14px;
+            border-radius: 7px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        nav a:hover, nav a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        nav a.active {
+            background: var(--teal);
+            color: white;
+        }
+
+        /* Page layout */
+        .page-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 36px 24px 60px;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Cards / sections */
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .form-card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-card-header h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-card-header .step-num {
+            width: 26px;
+            height: 26px;
+            background: var(--teal);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .form-card-body {
+            padding: 24px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid-2 { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group:last-child { margin-bottom: 0; }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--text);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .required { color: var(--error); }
+
+        input[type="text"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 13px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background: white;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        }
+
+        textarea { min-height: 110px; resize: vertical; }
+
+        /* Map */
+        .map-instructions {
+            background: #f0fdfa;
+            border: 1px solid #99f6e4;
+            color: #0f766e;
+            padding: 13px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            line-height: 1.55;
+        }
+
+        #map {
+            width: 100%;
+            height: 420px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 0;
+        }
+
+        .location-display {
+            background: var(--slate-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 13px 16px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .location-display strong { color: var(--text); }
+
+        /* File input */
+        .file-input-wrapper {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            position: relative;
+        }
+
+        .file-input-wrapper:hover {
+            border-color: var(--teal);
+            background: #f0fdfa;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .file-input-icon { font-size: 2rem; margin-bottom: 8px; }
+        .file-input-text { font-size: 0.875rem; color: var(--text-muted); }
+        .file-input-text strong { color: var(--teal); }
+        .file-input-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+
+        #filePreview { margin-top: 14px; }
+        #filePreview img, #filePreview video {
+            max-width: 180px;
+            max-height: 180px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: var(--error);
+            border: 1px solid #fecaca;
+        }
+
+        /* Submit */
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--teal);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .submit-btn:hover {
+            background: var(--teal-light);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+        }
+
+        .submit-btn:active { transform: translateY(0); }
+
+        /* Priority badges */
+        .priority-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .priority-option input { display: none; }
+
+        .priority-label {
+            display: block;
+            padding: 10px;
+            text-align: center;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.825rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+
+        .priority-option input:checked + .priority-label {
+            border-color: var(--teal);
+            background: #f0fdfa;
+            color: var(--teal);
+        }
+
+        @media (max-width: 480px) {
+            .priority-grid { grid-template-columns: repeat(2, 1fr); }
+            header { padding: 0 16px; }
+            nav a { padding: 6px 10px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-brand">
+            <span>🗺️</span>
+            Geo-Track
+        </div>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/request" class="active">New Request</a>
+            <a href="/my-requests">My Requests</a>
+            <a href="#" onclick="confirmSignOut(event)">Sign Out</a>
+        </nav>
+    </header>
+
+    <div class="page-container">
+        <div class="page-header">
+            <h1>Submit Service Request</h1>
+            <p>Barangay Sumagui Community Service System</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <form id="requestForm">
+            <!-- Step 1: Service Info -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="step-num">1</div>
+                    <h2>Service Information</h2>
+                </div>
+                <div class="form-card-body">
+                    <div class="form-group">
+                        <label for="serviceType">Service Type <span class="required">*</span></label>
+                        <select id="serviceType" name="serviceType" required>
+                            <option value="">Select Service Type</option>
+                            <option value="Garbage Collection">Garbage Collection</option>
+                            <option value="Road Repair">Road Repair</option>
+                            <option value="Street Light Repair">Street Light Repair</option>
+                            <option value="Water Supply Issue">Water Supply Issue</option>
+                            <option value="Drainage Problem">Drainage Problem</option>
+                            <option value="Tree Trimming">Tree Trimming</option>
+                            <option value="Community Health">Community Health</option>
+                            <option value="Public Safety">Public Safety</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description <span class="required">*</span></label>
+                        <textarea id="description" name="description" placeholder="Describe the issue in detail — what it is, where it is, and how urgent it is..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Priority Level</label>
+                        <div class="priority-grid">
+                            <div class="priority-option">
+                                <input type="radio" id="p-low" name="priority" value="low">
+                                <label class="priority-label" for="p-low">🟢 Low</label>
+                            </div>
+                            <div class="priority-option">
+                                <input type="radio" id="p-medium" name="priority" value="medium" checked>
+                                <label class="priority-label" for="p-medium">🟡 Medium</label>
+                            </div>
+                            <div class="priority-option">
+                                <input type="radio" id="p-high" name="priority" value="high">
+                                <label class="priority-label" for="p-high">🟠 High</label>
+                            </div>
+                            <div class="priority-option">
+                                <input type="radio" id="p-urgent" name="priority" value="urgent">
+                                <label class="priority-label" for="p-urgent">🔴 Urgent</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Location -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="step-num">2</div>
+                    <h2>Location</h2>
+                </div>
+                <div class="form-card-body">
+                    <div class="map-instructions">
+                        <strong>📍 How to mark the location:</strong> Click anywhere on the map or drag the pin to the exact spot. The coordinates will be captured automatically.
+                    </div>
+                    <div id="map"></div>
+                    <div class="location-display">
+                        <strong>Selected location:</strong>
+                        <span id="selectedAddress">Click on the map to select a location</span>
+                        &nbsp;&nbsp;<strong>Coords:</strong>
+                        <span id="coordsDisplay">—</span>
+                    </div>
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                    <input type="hidden" id="address" name="address">
+                    <input type="hidden" id="barangay" name="barangay">
+                </div>
+            </div>
+
+            <!-- Step 3: Contact -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="step-num">3</div>
+                    <h2>Contact Information</h2>
+                </div>
+                <div class="form-card-body">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="contactName">Contact Name <span class="required">*</span></label>
+                            <input type="text" id="contactName" name="contactName" value="{{user.name}}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactPhone">Contact Phone <span class="required">*</span></label>
+                            <input type="tel" id="contactPhone" name="contactPhone" placeholder="09XX-XXX-XXXX" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Attachment -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="step-num">4</div>
+                    <h2>Attach Photo or Video <span class="required">*</span></h2>
+                </div>
+                <div class="form-card-body">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="attachment" name="attachment" accept="image/*,video/*" required>
+                        <div class="file-input-icon">📎</div>
+                        <div class="file-input-text"><strong>Click to upload</strong> or drag and drop</div>
+                        <div class="file-input-hint">JPG, PNG, GIF, MP4, MOV, WebM — Max 50 MB</div>
+                    </div>
+                    <div id="filePreview"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <span>📤</span> Submit Service Request
+            </button>
+        </form>
+    </div>
+
+    <!-- Sign Out Confirmation Modal -->
+    <div id="signoutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:14px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
+            <div style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:1rem;font-weight:600;color:#1e293b;">Sign Out</span>
+                <button onclick="closeSignOut()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1;">&times;</button>
+            </div>
+            <div style="padding:28px 24px;text-align:center;">
+                <div style="font-size:2.4rem;margin-bottom:14px;">👋</div>
+                <p style="font-size:.975rem;font-weight:600;color:#1e293b;margin-bottom:6px;">Are you sure you want to sign out?</p>
+                <p style="font-size:.85rem;color:#64748b;">Any unsaved changes to your form will be lost.</p>
+            </div>
+            <div style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;">
+                <button onclick="window.location.href='/logout'" style="flex:1;padding:11px;background:#0d9488;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:.9rem;font-family:inherit;cursor:pointer;">Yes, Sign Out</button>
+                <button onclick="closeSignOut()" style="flex:1;padding:11px;background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;border-radius:8px;font-weight:600;font-size:.9rem;font-family:inherit;cursor:pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on Bansud, Oriental Mindoro
+        const map = L.map('map').setView([13.1833, 121.8667], 16);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        let marker = null;
+
+        function updateMarker(lat, lng) {
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng], {
+                    draggable: true,
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map);
+
+                marker.on('dragend', function() {
+                    const pos = marker.getLatLng();
+                    updateLocation(pos.lat, pos.lng);
+                });
+            }
+            updateLocation(lat, lng);
+        }
+
+        function updateLocation(lat, lng) {
+            document.getElementById('latitude').value = lat.toFixed(6);
+            document.getElementById('longitude').value = lng.toFixed(6);
+            document.getElementById('coordsDisplay').textContent = lat.toFixed(6) + ', ' + lng.toFixed(6);
+            document.getElementById('address').value = 'Barangay Sumagui, Calapan City - Lat: ' + lat.toFixed(6) + ', Lng: ' + lng.toFixed(6);
+            document.getElementById('selectedAddress').textContent = 'Barangay Sumagui, Calapan City (' + lat.toFixed(6) + ', ' + lng.toFixed(6) + ')';
+        }
+
+        map.on('click', function(e) {
+            updateMarker(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Set initial marker at Bansud center
+        updateMarker(13.1833, 121.8667);
+
+        // Set barangay from user data
+        document.getElementById('barangay').value = '{{{userBarangay}}}' || 'Sumagui';
+
+        // File preview
+        document.getElementById('attachment').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('filePreview');
+            preview.innerHTML = '';
+
+            if (file) {
+                const isImage = file.type.startsWith('image/');
+                const isVideo = file.type.startsWith('video/');
+
+                if (isImage) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        preview.innerHTML = '<img src="' + evt.target.result + '" alt="Preview">';
+                    };
+                    reader.readAsDataURL(file);
+                } else if (isVideo) {
+                    preview.innerHTML = '<p style="margin-top: 8px; font-size: 0.85rem; color: #64748b;">📹 ' + file.name + '</p>';
+                }
+            }
+        });
+
+        // Form submission
+        document.getElementById('requestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('attachment');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showAlert('Please upload a photo or video', 'error');
+                return;
+            }
+
+            const formDataToSend = new FormData();
+            formDataToSend.append('serviceType', document.getElementById('serviceType').value);
+            formDataToSend.append('description', document.getElementById('description').value);
+
+            const priorityEl = document.querySelector('input[name="priority"]:checked');
+            formDataToSend.append('priority', priorityEl ? priorityEl.value : 'medium');
+
+            formDataToSend.append('latitude', document.getElementById('latitude').value);
+            formDataToSend.append('longitude', document.getElementById('longitude').value);
+            formDataToSend.append('address', document.getElementById('address').value);
+            formDataToSend.append('barangay', document.getElementById('barangay').value);
+            formDataToSend.append('contactName', document.getElementById('contactName').value);
+            formDataToSend.append('contactPhone', document.getElementById('contactPhone').value);
+            formDataToSend.append('attachment', fileInput.files[0]);
+
+            if (!formDataToSend.get('latitude') || !formDataToSend.get('longitude')) {
+                showAlert('Please select a location on the map', 'error');
+                return;
+            }
+
+            if (!formDataToSend.get('serviceType')) {
+                showAlert('Please select a service type', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/request', {
+                    method: 'POST',
+                    body: formDataToSend
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('✅ Service request submitted successfully! Redirecting...', 'success');
+                    setTimeout(() => { window.location.href = '/my-requests'; }, 2000);
+                } else {
+                    showAlert('❌ Failed to submit request: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showAlert('❌ Error submitting request: ' + error.message, 'error');
+            }
+        });
+
+        function confirmSignOut(e) {
+            e.preventDefault();
+            var modal = document.getElementById('signoutModal');
+            modal.style.display = 'flex';
+        }
+        function closeSignOut() {
+            document.getElementById('signoutModal').style.display = 'none';
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-' + type;
+            alertDiv.textContent = message;
+
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = '';
+            container.appendChild(alertDiv);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (type === 'success') {
+                setTimeout(() => alertDiv.remove(), 5000);
+            }
+        }
+    </script>
+</body>
+</html>

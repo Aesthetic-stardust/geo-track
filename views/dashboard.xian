@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - Geo-Track</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --navy: #0f2044;
+            --navy-mid: #1a3260;
+            --teal: #0d9488;
+            --teal-light: #14b8a6;
+            --slate: #64748b;
+            --slate-light: #f1f5f9;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--slate-light);
+            min-height: 100vh;
+        }
+
+        /* Top nav */
+        header {
+            background: var(--navy);
+            color: white;
+            padding: 0 40px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            isolation: isolate;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .header-brand span {
+            width: 32px;
+            height: 32px;
+            background: var(--teal);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-user {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        .btn-logout {
+            padding: 7px 18px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: background 0.2s;
+        }
+
+        .btn-logout:hover { background: rgba(255,255,255,0.18); }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Welcome banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+            color: white;
+            border-radius: 14px;
+            padding: 36px 40px;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::after {
+            content: '🗺️';
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 5rem;
+            opacity: 0.12;
+        }
+
+        .welcome-banner h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .welcome-banner p {
+            font-size: 0.925rem;
+            opacity: 0.75;
+            max-width: 520px;
+            line-height: 1.6;
+        }
+
+        /* Action cards */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px 26px;
+            text-decoration: none;
+            color: inherit;
+            border: 1.5px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+        }
+
+        .action-card:hover {
+            border-color: var(--teal);
+            box-shadow: 0 4px 20px rgba(13, 148, 136, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .action-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .icon-teal { background: #ccfbf1; }
+        .icon-navy { background: #dbeafe; }
+
+        .action-body h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .action-body p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+        }
+
+        .action-arrow {
+            margin-left: auto;
+            color: var(--teal);
+            font-size: 1.2rem;
+            align-self: center;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .action-card:hover .action-arrow {
+            opacity: 1;
+            transform: translateX(4px);
+        }
+
+        /* Services list */
+        .services-section {
+            background: white;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            overflow: hidden;
+        }
+
+        .section-head {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-head h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .service-item {
+            background: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .service-item::before {
+            content: '✓';
+            color: var(--teal);
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-brand">
+            <span>🗺️</span>
+            Geo-Track
+        </div>
+        <div class="header-right">
+            <span class="header-user">{{user.name}}</span>
+            <a href="#" class="btn-logout" onclick="confirmSignOut(event)">Sign Out</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="welcome-banner">
+            <h1>Welcome back, {{user.name}} 👋</h1>
+            <p>Use this platform to submit service requests for your barangay with precise location mapping, then track their progress in real-time.</p>
+        </div>
+
+        <div class="actions-grid">
+            <a href="/request" class="action-card">
+                <div class="action-icon icon-teal">📍</div>
+                <div class="action-body">
+                    <h3>Submit New Request</h3>
+                    <p>Report a community issue with an exact location on the map</p>
+                </div>
+                <span class="action-arrow">→</span>
+            </a>
+
+            <a href="/my-requests" class="action-card">
+                <div class="action-icon icon-navy">📋</div>
+                <div class="action-body">
+                    <h3>My Requests</h3>
+                    <p>View and track all your submitted service requests</p>
+                </div>
+                <span class="action-arrow">→</span>
+            </a>
+        </div>
+
+        <div class="services-section">
+            <div class="section-head">
+                <span>🛠</span>
+                <h2>Available Services</h2>
+            </div>
+            <div class="services-grid">
+                <div class="service-item">Garbage Collection</div>
+                <div class="service-item">Road Repair</div>
+                <div class="service-item">Street Light Repair</div>
+                <div class="service-item">Water Supply Issues</div>
+                <div class="service-item">Drainage Problems</div>
+                <div class="service-item">Tree Trimming</div>
+                <div class="service-item">Community Health</div>
+                <div class="service-item">Public Safety</div>
+            </div>
+        </div>
+    </div>
+    <!-- Sign Out Confirmation Modal -->
+    <div id="signoutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:14px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
+            <div style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:1rem;font-weight:600;color:#1e293b;">Sign Out</span>
+                <button onclick="closeSignOut()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1;">&times;</button>
+            </div>
+            <div style="padding:28px 24px;text-align:center;">
+                <div style="font-size:2.4rem;margin-bottom:14px;">👋</div>
+                <p style="font-size:.975rem;font-weight:600;color:#1e293b;margin-bottom:6px;">Are you sure you want to sign out?</p>
+                <p style="font-size:.85rem;color:#64748b;">You will need to sign in again to continue.</p>
+            </div>
+            <div style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;">
+                <button onclick="window.location.href='/logout'" style="flex:1;padding:11px;background:#0d9488;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:.9rem;font-family:inherit;cursor:pointer;">Yes, Sign Out</button>
+                <button onclick="closeSignOut()" style="flex:1;padding:11px;background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;border-radius:8px;font-weight:600;font-size:.9rem;font-family:inherit;cursor:pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmSignOut(e) {
+            e.preventDefault();
+            var modal = document.getElementById('signoutModal');
+            modal.style.display = 'flex';
+        }
+        function closeSignOut() {
+            document.getElementById('signoutModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - Geo-Track</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --navy: #0f2044;
+            --navy-mid: #1a3260;
+            --teal: #0d9488;
+            --teal-light: #14b8a6;
+            --slate: #64748b;
+            --slate-light: #f1f5f9;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--slate-light);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .auth-split {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .auth-brand {
+            flex: 0 0 38%;
+            background: linear-gradient(160deg, var(--navy) 0%, var(--navy-mid) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 50px;
+            color: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-brand::before {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: rgba(13, 148, 136, 0.1);
+        }
+
+        .brand-logo {
+            width: 72px;
+            height: 72px;
+            background: var(--teal);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 28px;
+            box-shadow: 0 8px 32px rgba(13, 148, 136, 0.4);
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-tagline {
+            font-size: 0.925rem;
+            opacity: 0.7;
+            text-align: center;
+            line-height: 1.6;
+            max-width: 260px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-divider {
+            width: 40px;
+            height: 3px;
+            background: var(--teal);
+            border-radius: 2px;
+            margin: 24px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-form-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: var(--white);
+            overflow-y: auto;
+        }
+
+        .auth-form-wrapper {
+            width: 100%;
+            max-width: 440px;
+            padding: 20px 0;
+        }
+
+        .auth-form-header {
+            margin-bottom: 32px;
+        }
+
+        .auth-form-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .auth-form-header p {
+            font-size: 0.925rem;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--text);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .required { color: #dc2626; }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.925rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background: var(--white);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '▾';
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--slate);
+            pointer-events: none;
+            font-size: 0.85rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: var(--teal);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            font-family: 'Inter', sans-serif;
+            margin-top: 6px;
+        }
+
+        .btn-primary:hover {
+            background: var(--teal-light);
+            box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .auth-links {
+            margin-top: 22px;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .auth-links a {
+            color: var(--teal);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-links a:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .auth-brand { display: none; }
+            .auth-form-panel { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-split">
+        <div class="auth-brand">
+            <div class="brand-logo">🗺️</div>
+            <div class="brand-name">Geo-Track</div>
+            <div class="brand-tagline">Create an account to start submitting community service requests</div>
+            <div class="brand-divider"></div>
+            <p style="font-size: 0.825rem; opacity: 0.6; text-align: center; position: relative; z-index: 1;">Municipality of Bansud, Oriental Mindoro</p>
+        </div>
+
+        <div class="auth-form-panel">
+            <div class="auth-form-wrapper">
+                <div class="auth-form-header">
+                    <h2>Create your account</h2>
+                    <p>Fill in the details below to get started</p>
+                </div>
+
+                <form method="POST" action="/register">
+                    <div class="form-group">
+                        <label for="name">Full Name <span class="required">*</span></label>
+                        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                        <input type="tel" id="phone" name="phone" placeholder="09XX-XXX-XXXX">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="barangay">Barangay <span class="required">*</span></label>
+                        <div class="select-wrapper">
+                            <select id="barangay" name="barangay" required>
+                                <option value="">Select your barangay</option>
+                                <option value="Alcadesma">Alcadesma</option>
+                                <option value="Bato">Bato</option>
+                                <option value="Conrazon">Conrazon</option>
+                                <option value="Malo">Malo</option>
+                                <option value="Manihala">Manihala</option>
+                                <option value="Pag-asa">Pag-asa</option>
+                                <option value="Poblacion">Poblacion</option>
+                                <option value="Proper Bansud">Proper Bansud</option>
+                                <option value="Rosacara">Rosacara</option>
+                                <option value="Salcedo">Salcedo</option>
+                                <option value="Sumagui">Sumagui</option>
+                                <option value="Proper Tiguisan">Proper Tiguisan</option>
+                                <option value="Villa Pagasa">Villa Pagasa</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password <span class="required">*</span></label>
+                        <input type="password" id="password" name="password" placeholder="Create a strong password" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Create Account</button>
+                </form>
+
+                <div class="auth-links">
+                    Already have an account? <a href="/login">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

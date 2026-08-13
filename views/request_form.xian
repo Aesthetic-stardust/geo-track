@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geo-Track: GIS Implementation Request</title>
+
+    {{-- Leaflet CSS for the map --}}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    
+    {{-- Google Fonts for better typography --}}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+
+    <style>
+        #map {
+            height: 400px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .map-placeholder {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        {{-- HEADER SECTION --}}
+        <div class="header">
+            <div class="logo">
+                {{-- Ensure geo-track-logo.png is in public/images/ --}}
+                <img src="{{ asset('images/geo-track-logo.png') }}" alt="Geo-Track Logo">
+            </div>
+            <div class="title-section">
+                <h1>Geo-Track: GIS Implementation Request</h1>
+                <p>For Real-Time Community Service Monitoring - Barangay Sumagui</p>
+            </div>
+        </div>
+
+        {{-- MAIN FORM START --}}
+        <form id="reqForm" action="#" method="POST" enctype="multipart/form-data" class="request-form">
+            @csrf 
+
+            {{-- Hidden fields for Leaflet coordinates --}}
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
+
+            {{-- I. REQUESTOR ENTITY SECTION --}}
+            <div class="form-section">
+                <h2>I. Requestor Entity</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="requesting_entity">Requesting Entity <span class="required">*</span></label>
+                        <input type="text" id="requesting_entity" name="requesting_entity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="primary_contact">Name of Primary Contact <span class="required">*</span></label>
+                        <input type="text" id="primary_contact" name="primary_contact" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="designation">Designation/Position <span class="required">*</span></label>
+                        <input type="text" id="designation" name="designation" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="contact_details">Contact of ainsliy Temwarld atay <span class="required">*</span></label>
+                        <input type="text" id="contact_details" name="contact_details" required>
+                    </div>
+                </div>
+            </div>
+
+            {{-- II. LOCATION & SCOPE SECTION --}}
+            <div class="form-section section-location-scope">
+                <div class="location-map">
+                    <h2>Location of Integration (Drag Pin)</h2>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                        Your current location will be used as the default. You can drag the pin or click on the map to pinpoint the exact location of the service request.
+                    </p>
+                    
+                    {{-- The Leaflet Map Container --}}
+                    <div id="map" class="map-placeholder">
+                        {{-- Map will render here --}}
+                    </div>
+                    
+                    {{-- Additional Request Details --}}
+                    <div class="map-form-details">
+                         <div class="form-group full-width">
+                            <label for="category">Category <span class="required">*</span></label>
+                            <input type="text" name="category" placeholder="e.g. Garbage Collection, Road Repair" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="description">Description <span class="required">*</span></label>
+                            <textarea name="description" placeholder="Describe the issue in detail..." required></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="photo">Upload Photo</label>
+                            <input type="file" name="photo" id="photo" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="implementation-scope">
+                    <h2>Implementation Scope</h2>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="scope[]" value="replcond_diedenga" checked> Replcond Diedenga
+                        </label>
+                        <label>
+                            <input type="checkbox" name="scope[]" value="minthoping_cntttas"> Minthoping Cntttas
+                        </label>
+                        <label>
+                            <input type="checkbox" name="scope[]" value="deriorl_smafkai"> Deriorl Smafkai
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            {{-- III. IMPLEMENTATION DETAILS SECTION --}}
+            <div class="form-section section-implementation-details">
+                <h2>Implementmtion Details</h2>
+                <div class="form-grid details-grid">
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="details[]" value="sobee_vlrs" checked> Sobee Vlrs
+                        </label>
+                        <label>
+                            <input type="checkbox" name="details[]" value="senest_lmd_ofs_smafkai"> Senest lum dot ofs Smafkai
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="festant_steties">Festant Steties</label>
+                        <input type="text" id="festant_steties" name="festant_steties" value="Sobse Vlrs">
+                        <input type="text" id="longloides_clas_fely" name="longloides_clas_fely" value="Longloides clas fely">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">
+                {{-- Ensure check_icon.png is in public/images/ --}}
+                <img src="{{ asset('images/check_icon.png') }}" alt="Check Icon"> Submit Geo-Track Request
+            </button>
+        </form>
+    </div>
+
+    {{-- Leaflet JS and your custom script --}}
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="{{ asset('js/request_form.js') }}" defer></script>
+</body>
+</html>

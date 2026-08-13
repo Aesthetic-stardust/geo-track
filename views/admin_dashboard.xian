@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--navy:#0f2044;--navy-mid:#1a3260;--teal:#0d9488;--teal-light:#14b8a6;--slate:#64748b;--slate-light:#f1f5f9;--white:#fff;--border:#e2e8f0;--text:#1e293b;--text-muted:#64748b}
+        body{font-family:'Inter',sans-serif;background:var(--slate-light);min-height:100vh}
+        header{background:var(--navy);color:#fff;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1000;isolation:isolate}
+        .header-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem}
+        .hbi{width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem}
+        .header-right{display:flex;align-items:center;gap:16px}
+        .header-user{font-size:.875rem;opacity:.8}
+        .header-role{font-size:.75rem;opacity:.55;text-transform:uppercase;letter-spacing:.5px}
+        .btn-logout{padding:7px 16px;background:rgba(255,255,255,.1);color:#fff;text-decoration:none;border-radius:7px;font-size:.85rem;font-weight:500;border:1px solid rgba(255,255,255,.15);transition:background .2s}
+        .btn-logout:hover{background:rgba(255,255,255,.18)}
+        .page{max-width:1400px;margin:0 auto;padding:32px 24px 60px}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px}
+        .stat-card{background:#fff;border-radius:12px;padding:22px 20px;border:1.5px solid var(--border);text-align:center;transition:box-shadow .2s,transform .15s}
+        .stat-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.08);transform:translateY(-2px)}
+        .stat-val{font-size:2.2rem;font-weight:800;margin-bottom:6px}
+        .stat-lbl{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}
+        .c-pending{color:#f59e0b}.c-approved{color:#3b82f6}.c-ongoing{color:#8b5cf6}.c-completed{color:#10b981}.c-rejected{color:#ef4444}.c-total{color:var(--teal)}
+        .workflow-card{background:#fff;border-radius:12px;border:1.5px solid var(--border);padding:22px 24px;margin-bottom:24px}
+        .card-head{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+        .workflow-stages{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding-bottom:8px}
+        .stage{flex:1;min-width:120px;text-align:center;position:relative}
+        .stage:not(:last-child)::after{content:'';position:absolute;top:27px;left:60%;width:80%;height:2px;background:var(--border);z-index:0}
+        .stage-circle{width:54px;height:54px;border-radius:50%;background:var(--slate-light);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;position:relative;z-index:1;transition:all .3s}
+        .stage-active .stage-circle{background:var(--teal);border-color:var(--teal);box-shadow:0 4px 14px rgba(13,148,136,.35)}
+        .stage-lbl{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:3px}
+        .stage-count{font-size:.78rem;color:var(--text-muted)}
+        .filter-bar{background:#fff;border-radius:12px;border:1.5px solid var(--border);padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+        .filter-bar label{font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+        .filter-bar select{padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:.875rem;font-family:inherit;color:var(--text);background:#fff;transition:border-color .2s}
+        .filter-bar select:focus{outline:none;border-color:var(--teal)}
+        .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+        @media(max-width:1024px){.dash-grid{grid-template-columns:1fr}}
+        .panel{background:#fff;border-radius:12px;border:1.5px solid var(--border);overflow:hidden}
+        .panel-head{padding:16px 22px;border-bottom:1px solid var(--border);font-size:.95rem;font-weight:600;color:var(--text)}
+        #map{width:100%;height:460px;position:relative;z-index:0}
+        .brgy-filter{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--slate-light)}
+        .brgy-filter-title{font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+        .brgy-tags{display:flex;gap:6px;flex-wrap:wrap}
+        .brgy-tag{padding:5px 12px;border:1.5px solid var(--border);background:#fff;border-radius:20px;font-size:.78rem;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all .2s;user-select:none}
+        .brgy-tag.active,.brgy-tag:hover{border-color:var(--teal);background:var(--teal);color:#fff}
+        .req-list{max-height:460px;overflow-y:auto;padding:12px}
+        .req-card{border:1.5px solid var(--border);border-radius:9px;padding:14px 16px;margin-bottom:12px;transition:border-color .2s,box-shadow .2s}
+        .req-card:hover{border-color:var(--teal);box-shadow:0 3px 12px rgba(13,148,136,.12)}
+        .req-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+        .req-type{font-weight:600;font-size:.95rem;color:var(--text)}
+        .status-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;text-transform:uppercase;white-space:nowrap;letter-spacing:.2px;flex-shrink:0}
+        .status-pending{background:#fef3c7;color:#92400e}.status-approved{background:#dbeafe;color:#1e40af}.status-ongoing{background:#ede9fe;color:#5b21b6}.status-completed{background:#dcfce7;color:#15803d}.status-rejected{background:#fee2e2;color:#991b1b}
+        .req-desc{font-size:.83rem;color:var(--text-muted);margin-bottom:8px;line-height:1.5}
+        .req-meta{display:flex;gap:10px;font-size:.78rem;color:var(--slate);flex-wrap:wrap}
+        .req-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+        .btn{padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:.82rem;transition:opacity .2s,transform .1s;font-family:inherit;white-space:nowrap}
+        .btn:hover{opacity:.88;transform:translateY(-1px)}
+        .btn-view{background:#f1f5f9;color:var(--text);border:1px solid var(--border)}.btn-approve{background:#10b981;color:#fff}.btn-ongoing{background:#8b5cf6;color:#fff}.btn-complete{background:#3b82f6;color:#fff}.btn-reject{background:#ef4444;color:#fff}
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);z-index:1000;align-items:center;justify-content:center}
+        .modal-overlay.open{display:flex}
+        .modal{background:#fff;border-radius:14px;max-width:600px;width:90%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+        .modal-head{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .modal-head h3{font-size:1rem;font-weight:600;color:var(--text)}
+        .modal-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);line-height:1;padding:2px 6px}
+        .modal-body{padding:22px 24px;overflow-y:auto;flex:1}
+        .modal-body p{margin-bottom:10px;font-size:.9rem;color:var(--text);line-height:1.55}
+        .modal-img{max-width:100%;max-height:320px;border-radius:8px;border:1.5px solid var(--border);margin-top:10px;display:block}
+        .rej-modal{max-width:460px}
+        .rej-modal .modal-body label{display:block;font-size:.875rem;font-weight:500;color:var(--text);margin-bottom:7px}
+        .rej-modal .modal-body textarea{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;min-height:110px;resize:vertical;color:var(--text)}
+        .rej-modal .modal-body textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.1)}
+        .modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0}
+        .btn-mfull{flex:1;padding:11px;border:none;border-radius:8px;font-weight:600;font-size:.9rem;font-family:inherit;cursor:pointer;transition:opacity .2s}
+        .btn-mfull:hover{opacity:.88}
+        .btn-mok{background:#ef4444;color:#fff}.btn-mcancel{background:var(--slate-light);color:var(--text);border:1px solid var(--border)}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-brand">
+            <div class="hbi">🗺️</div>
+            Geo-Track Admin
+        </div>
+        <div class="header-right">
+            <div>
+                <div class="header-user">{{user.name}}</div>
+                <div class="header-role">Administrator</div>
+            </div>
+            <a href="#" class="btn-logout" onclick="confirmSignOut(event)">Sign Out</a>
+        </div>
+    </header>
+
+    <div class="page">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-val c-pending">{{stats.pending}}</div><div class="stat-lbl">Pending</div></div>
+            <div class="stat-card"><div class="stat-val c-approved">{{stats.approved}}</div><div class="stat-lbl">Approved</div></div>
+            <div class="stat-card"><div class="stat-val c-ongoing">{{stats.ongoing}}</div><div class="stat-lbl">On-going</div></div>
+            <div class="stat-card"><div class="stat-val c-completed">{{stats.completed}}</div><div class="stat-lbl">Completed</div></div>
+            <div class="stat-card"><div class="stat-val c-rejected">{{stats.rejected}}</div><div class="stat-lbl">Rejected</div></div>
+            <div class="stat-card"><div class="stat-val c-total">{{stats.total}}</div><div class="stat-lbl">Total</div></div>
+        </div>
+
+        <div class="workflow-card">
+            <div class="card-head">Request Workflow</div>
+            <div class="workflow-stages">
+                <div class="stage {{#if stats.pending}}stage-active{{/if}}">
+                    <div class="stage-circle">📋</div>
+                    <div class="stage-lbl">Pending</div>
+                    <div class="stage-count">{{stats.pending}} requests</div>
+                </div>
+                <div class="stage {{#if stats.approved}}stage-active{{/if}}">
+                    <div class="stage-circle">✓</div>
+                    <div class="stage-lbl">Approved</div>
+                    <div class="stage-count">{{stats.approved}} requests</div>
+                </div>
+                <div class="stage {{#if stats.ongoing}}stage-active{{/if}}">
+                    <div class="stage-circle">⚙️</div>
+                    <div class="stage-lbl">On-going</div>
+                    <div class="stage-count">{{stats.ongoing}} requests</div>
+                </div>
+                <div class="stage {{#if stats.completed}}stage-active{{/if}}">
+                    <div class="stage-circle">✅</div>
+                    <div class="stage-lbl">Completed</div>
+                    <div class="stage-count">{{stats.completed}} requests</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <label>Filter:</label>
+            <select id="filterStatus">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="ongoing">On-going</option>
+                <option value="completed">Completed</option>
+                <option value="rejected">Rejected</option>
+            </select>
+            <select id="filterService">
+                <option value="">All Services</option>
+                <option value="Garbage Collection">Garbage Collection</option>
+                <option value="Road Repair">Road Repair</option>
+                <option value="Street Light Repair">Street Light Repair</option>
+                <option value="Water Supply Issue">Water Supply Issue</option>
+                <option value="Drainage Problem">Drainage Problem</option>
+                <option value="Tree Trimming">Tree Trimming</option>
+                <option value="Community Health">Community Health</option>
+                <option value="Public Safety">Public Safety</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="dash-grid">
+            <div class="panel">
+                <div class="panel-head">🗺️ Service Requests Map</div>
+                <div id="map"></div>
+            </div>
+
+            <div class="panel">
+                <div class="brgy-filter">
+                    <div class="brgy-filter-title">Filter by Barangay</div>
+                    <div class="brgy-tags">
+                        <span class="brgy-tag active" onclick="filterByBarangay('all',this)">All</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Alcadesma',this)">Alcadesma</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Bato',this)">Bato</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Conrazon',this)">Conrazon</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Malo',this)">Malo</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Manihala',this)">Manihala</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Pag-asa',this)">Pag-asa</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Poblacion',this)">Poblacion</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Proper Bansud',this)">Proper Bansud</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Rosacara',this)">Rosacara</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Salcedo',this)">Salcedo</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Sumagui',this)">Sumagui</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Proper Tiguisan',this)">Proper Tiguisan</span>
+                        <span class="brgy-tag" onclick="filterByBarangay('Villa Pagasa',this)">Villa Pagasa</span>
+                    </div>
+                </div>
+                <div class="req-list" id="requestsList">
+                    {{#each requests}}
+                    <div class="req-card" data-status="{{this.status}}" data-service="{{this.serviceType}}" data-barangay="{{this.barangay}}">
+                        <div class="req-card-top">
+                            <div class="req-type">{{this.serviceType}}</div>
+                            <span class="status-badge status-{{this.status}}">{{this.status}}</span>
+                        </div>
+                        <div class="req-desc">{{this.description}}</div>
+                        <div class="req-meta">
+                            <span>👤 {{this.User.name}}</span>
+                            <span>🏘️ {{this.barangay}}</span>
+                            <span>📞 {{this.contactPhone}}</span>
+                        </div>
+                        <div class="req-actions">
+                            <button class="btn btn-view" onclick="viewRequest({{this.id}})">View</button>
+                            {{#if (eq this.status 'pending')}}
+                            <button class="btn btn-approve" onclick="updateStatus({{this.id}},'approved')">Approve</button>
+                            <button class="btn btn-reject" onclick="openRejectionModal({{this.id}})">Reject</button>
+                            {{/if}}
+                            {{#if (eq this.status 'approved')}}
+                            <button class="btn btn-ongoing" onclick="updateStatus({{this.id}},'ongoing')">Start Work</button>
+                            {{/if}}
+                            {{#if (eq this.status 'ongoing')}}
+                            <button class="btn btn-complete" onclick="updateStatus({{this.id}},'completed')">Complete</button>
+                            {{/if}}
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Modal -->
+    <div class="modal-overlay" id="requestModal">
+        <div class="modal">
+            <div class="modal-head">
+                <h3>Request Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div class="modal-overlay" id="rejectionModal">
+        <div class="modal rej-modal">
+            <div class="modal-head">
+                <h3>Reject Request</h3>
+                <button class="modal-close" onclick="closeRejectionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label>Rejection Reason</label>
+                <textarea id="rejectionReasonInput" placeholder="Please provide a reason for rejection..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-mfull btn-mok" onclick="confirmRejection()">Confirm Reject</button>
+                <button class="btn-mfull btn-mcancel" onclick="closeRejectionModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map', { center: [13.1833, 121.8500], zoom: 15 });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        var requests = {{{json requests}}};
+        var statusColors = { pending:'#f59e0b', approved:'#3b82f6', ongoing:'#8b5cf6', completed:'#10b981', rejected:'#ef4444' };
+
+        requests.forEach(function(request) {
+            if (request.latitude && request.longitude) {
+                var marker = L.circleMarker([request.latitude, request.longitude], {
+                    radius: 8, fillColor: statusColors[request.status] || '#0d9488',
+                    color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.85
+                }).addTo(map);
+                marker.bindPopup('<strong>' + request.serviceType + '</strong><br>Status: ' + request.status + '<br><button onclick="viewRequest(' + request.id + ')" style="margin-top:8px;padding:4px 10px;background:#0d9488;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:.8rem;">View Details</button>');
+            }
+        });
+
+        function viewRequest(id) {
+            fetch('/api/request/' + id)
+                .then(function(res) { return res.json(); })
+                .then(function(request) {
+                    var attachHTML = '';
+                    if (request.attachment) {
+                        var isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(request.attachment);
+                        attachHTML = isImg
+                            ? '<p style="margin-top:14px;font-weight:600;">Attached Image:</p><img src="' + request.attachment + '" class="modal-img" alt="Attachment">'
+                            : '<p style="margin-top:14px;font-weight:600;">Attached Video:</p><video class="modal-img" controls><source src="' + request.attachment + '" type="video/mp4"></video>';
+                    }
+                    document.getElementById('modalBody').innerHTML =
+                        '<p><strong>Service:</strong> ' + request.serviceType + '</p>' +
+                        '<p><strong>Status:</strong> <span class="status-badge status-' + request.status + '">' + request.status + '</span></p>' +
+                        '<p><strong>Description:</strong> ' + request.description + '</p>' +
+                        '<p><strong>Contact:</strong> ' + request.contactName + ' — ' + request.contactPhone + '</p>' +
+                        '<p><strong>Location:</strong> ' + request.latitude + ', ' + request.longitude + '</p>' +
+                        '<p><strong>Submitted:</strong> ' + new Date(request.createdAt).toLocaleString() + '</p>' +
+                        (request.notes ? '<p><strong>Notes:</strong> ' + request.notes + '</p>' : '') +
+                        (request.assignedTo ? '<p><strong>Assigned To:</strong> ' + request.assignedTo + '</p>' : '') +
+                        attachHTML;
+                    document.getElementById('requestModal').classList.add('open');
+                });
+        }
+
+        function closeModal() { document.getElementById('requestModal').classList.remove('open'); }
+
+        var currentRejectionRequestId = null;
+
+        function openRejectionModal(requestId) {
+            currentRejectionRequestId = requestId;
+            document.getElementById('rejectionReasonInput').value = '';
+            document.getElementById('rejectionModal').classList.add('open');
+        }
+
+        function closeRejectionModal() {
+            document.getElementById('rejectionModal').classList.remove('open');
+            currentRejectionRequestId = null;
+        }
+
+        function confirmRejection() {
+            var reason = document.getElementById('rejectionReasonInput').value.trim();
+            if (!reason) { alert('Please provide a rejection reason'); return; }
+            fetch('/api/admin/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: currentRejectionRequestId, status: 'rejected', rejectionReason: reason })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(result) {
+                if (result.success) { closeRejectionModal(); location.reload(); }
+                else alert('Failed to reject request');
+            })
+            .catch(function(err) { alert('Error: ' + err.message); });
+        }
+
+        function filterByBarangay(barangay, el) {
+            document.querySelectorAll('.brgy-tag').forEach(function(t) { t.classList.remove('active'); });
+            if (el) el.classList.add('active');
+            document.querySelectorAll('.req-card').forEach(function(card) {
+                card.style.display = (barangay === 'all' || card.dataset.barangay === barangay) ? 'block' : 'none';
+            });
+        }
+
+        function updateStatus(id, status) {
+            if (!confirm('Change status to ' + status + '?')) return;
+            fetch('/api/admin/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, status: status })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(result) {
+                if (result.success) location.reload();
+                else alert('Failed to update status');
+            })
+            .catch(function(err) { alert('Error: ' + err.message); });
+        }
+
+        document.getElementById('filterStatus').addEventListener('change', filterRequests);
+        document.getElementById('filterService').addEventListener('change', filterRequests);
+
+        function filterRequests() {
+            var status = document.getElementById('filterStatus').value;
+            var service = document.getElementById('filterService').value;
+            document.querySelectorAll('.req-card').forEach(function(card) {
+                var ms = !status || card.dataset.status === status;
+                var msv = !service || card.dataset.service === service;
+                card.style.display = ms && msv ? 'block' : 'none';
+            });
+        }
+    </script>
+    <!-- Sign Out Confirmation Modal -->
+    <div class="modal-overlay" id="signoutModal">
+        <div class="modal rej-modal" style="max-width:400px;">
+            <div class="modal-head">
+                <h3>Sign Out</h3>
+                <button class="modal-close" onclick="closeSignOut()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align:center;padding:28px 24px;">
+                <div style="font-size:2.4rem;margin-bottom:14px;">👋</div>
+                <p style="font-size:.975rem;font-weight:600;color:var(--text);margin-bottom:6px;">Are you sure you want to sign out?</p>
+                <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:0;">You will need to sign in again to access the dashboard.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-mfull btn-mok" style="background:var(--teal);" onclick="window.location.href='/logout'">Yes, Sign Out</button>
+                <button class="btn-mfull btn-mcancel" onclick="closeSignOut()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmSignOut(e) {
+            e.preventDefault();
+            document.getElementById('signoutModal').classList.add('open');
+        }
+        function closeSignOut() {
+            document.getElementById('signoutModal').classList.remove('open');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{department}} - Department Dashboard | Geo-Track</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --navy:#0f2044;--navy-mid:#1a3260;--teal:#0d9488;--teal-light:#14b8a6;
+            --slate-light:#f1f5f9;--white:#fff;--border:#e2e8f0;
+            --text:#1e293b;--text-muted:#64748b;
+        }
+        body{font-family:'Inter',sans-serif;background:var(--slate-light);min-height:100vh}
+
+        header{background:var(--navy);color:#fff;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .header-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem}
+        .hbi{width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem}
+        .header-back{padding:7px 16px;background:rgba(255,255,255,.1);color:#fff;text-decoration:none;border-radius:7px;font-size:.85rem;font-weight:500;border:1px solid rgba(255,255,255,.15);transition:background .2s}
+        .header-back:hover{background:rgba(255,255,255,.18)}
+
+        .page{max-width:1200px;margin:0 auto;padding:32px 24px 60px}
+
+        /* Dept header card */
+        .dept-banner{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);color:#fff;border-radius:14px;padding:30px 36px;margin-bottom:28px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;overflow:hidden;position:relative}
+        .dept-banner::after{content:'🏛️';position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:5rem;opacity:.1}
+        .dept-banner-left h1{font-size:1.6rem;font-weight:700;margin-bottom:8px}
+        .dept-cat-badge{display:inline-flex;align-items:center;background:rgba(13,148,136,.3);border:1px solid rgba(13,148,136,.5);color:#5eead4;padding:4px 14px;border-radius:20px;font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+        .dept-meta{font-size:.875rem;opacity:.7}
+        .dept-banner-right{text-align:right;flex-shrink:0;position:relative;z-index:1}
+        .dept-banner-right .ts{font-size:.8rem;opacity:.6;margin-bottom:4px}
+
+        /* Dept selector */
+        .dept-selector-card{background:#fff;border-radius:12px;border:1.5px solid var(--border);padding:20px 24px;margin-bottom:24px}
+        .dept-selector-label{font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+        .dept-selector-card select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;color:var(--text);background:#fff;transition:border-color .2s;cursor:pointer}
+        .dept-selector-card select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.1)}
+
+        /* Stats */
+        .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+        .stat-card{background:#fff;border-radius:12px;padding:20px;border:1.5px solid var(--border);text-align:center;border-top:3px solid var(--border)}
+        .stat-card.s-pending{border-top-color:#f59e0b}
+        .stat-card.s-progress{border-top-color:#3b82f6}
+        .stat-card.s-resolved{border-top-color:#10b981}
+        .stat-val{font-size:2.2rem;font-weight:800;color:var(--text);margin-bottom:4px}
+        .stat-lbl{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}
+
+        /* Table card */
+        .table-card{background:#fff;border-radius:12px;border:1.5px solid var(--border);overflow:hidden}
+        .table-head{padding:18px 24px;border-bottom:1px solid var(--border);font-size:.95rem;font-weight:600;color:var(--text)}
+        table{width:100%;border-collapse:collapse}
+        thead tr{background:var(--slate-light);border-bottom:2px solid var(--border)}
+        th{padding:12px 16px;text-align:left;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+        td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:.875rem;color:var(--text);vertical-align:middle}
+        tbody tr:hover{background:#fafbfc}
+        tbody tr:last-child td{border-bottom:0}
+
+        .status-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.2px;white-space:nowrap}
+        .status-pending{background:#fef3c7;color:#92400e}
+        .status-received{background:#dbeafe;color:#1e40af}
+        .status-in-progress{background:#ede9fe;color:#5b21b6}
+        .status-resolved{background:#dcfce7;color:#15803d}
+
+        .reason-cell{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-muted)}
+        .ts-cell{font-size:.8rem;color:var(--text-muted)}
+
+        .status-select{padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:.82rem;font-family:inherit;color:var(--text);background:#fff;cursor:pointer}
+        .status-select:focus{outline:none;border-color:var(--teal)}
+
+        .btn-update{padding:6px 14px;background:var(--teal);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600;font-family:inherit;transition:background .2s,transform .1s;white-space:nowrap}
+        .btn-update:hover{background:var(--teal-light);transform:translateY(-1px)}
+
+        .no-reports{padding:60px 30px;text-align:center;color:var(--text-muted)}
+        .no-reports h3{font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:8px}
+
+        @media(max-width:768px){
+            .dept-banner{flex-direction:column}
+            .stats-row{grid-template-columns:1fr}
+            .table-card{overflow-x:auto}
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-brand">
+            <div class="hbi">🗺️</div>
+            Geo-Track
+        </div>
+        <a href="/" class="header-back">← Back to Portal</a>
+    </header>
+
+    <div class="page">
+        <!-- Dept banner -->
+        <div class="dept-banner">
+            <div class="dept-banner-left">
+                <div class="dept-cat-badge">{{departmentCategory}}</div>
+                <h1>🏛️ {{department}} Dashboard</h1>
+                <div class="dept-meta">Reports Received: <strong>{{totalReports}}</strong></div>
+            </div>
+            <div class="dept-banner-right">
+                <div class="ts">Last updated</div>
+                <div style="font-size:.875rem;opacity:.8;">{{formatDate now}}</div>
+            </div>
+        </div>
+
+        <!-- Dept Selector -->
+        <div class="dept-selector-card">
+            <div class="dept-selector-label">Switch Department</div>
+            <select id="deptSelect" onchange="changeDepartment()">
+                <option value="">-- Select a Department --</option>
+                <optgroup label="Crime &amp; Safety">
+                    <option value="PNP" {{#if (eq department "PNP")}}selected{{/if}}>PNP - Philippine National Police</option>
+                    <option value="BFP" {{#if (eq department "BFP")}}selected{{/if}}>BFP - Bureau of Fire Protection</option>
+                    <option value="BJMP" {{#if (eq department "BJMP")}}selected{{/if}}>BJMP - Bureau of Corrections</option>
+                </optgroup>
+                <optgroup label="Agriculture">
+                    <option value="DA" {{#if (eq department "DA")}}selected{{/if}}>DA - Department of Agriculture</option>
+                    <option value="NIA" {{#if (eq department "NIA")}}selected{{/if}}>NIA - National Irrigation Administration</option>
+                    <option value="BFAR" {{#if (eq department "BFAR")}}selected{{/if}}>BFAR - Bureau of Fisheries</option>
+                </optgroup>
+                <optgroup label="Incidents &amp; Disasters">
+                    <option value="NDRRMC" {{#if (eq department "NDRRMC")}}selected{{/if}}>NDRRMC - Disaster Management</option>
+                    <option value="PAGASA" {{#if (eq department "PAGASA")}}selected{{/if}}>PAGASA - Weather Bureau</option>
+                    <option value="PHIVOLCS" {{#if (eq department "PHIVOLCS")}}selected{{/if}}>PHIVOLCS - Volcano Monitoring</option>
+                </optgroup>
+                <optgroup label="Aid &amp; Assistance">
+                    <option value="DSWD" {{#if (eq department "DSWD")}}selected{{/if}}>DSWD - Social Welfare</option>
+                    <option value="DOH" {{#if (eq department "DOH")}}selected{{/if}}>DOH - Department of Health</option>
+                    <option value="Red Cross" {{#if (eq department "Red Cross")}}selected{{/if}}>Red Cross - Philippine Red Cross</option>
+                </optgroup>
+                <optgroup label="Electrical Issues">
+                    <option value="DOE" {{#if (eq department "DOE")}}selected{{/if}}>DOE - Department of Energy</option>
+                    <option value="NGCP" {{#if (eq department "NGCP")}}selected{{/if}}>NGCP - Power Distribution</option>
+                    <option value="NEA" {{#if (eq department "NEA")}}selected{{/if}}>NEA - Rural Electrification</option>
+                </optgroup>
+                <optgroup label="Water &amp; Sanitation">
+                    <option value="MWSS" {{#if (eq department "MWSS")}}selected{{/if}}>MWSS - Metro Water Supply</option>
+                    <option value="LGU Water District" {{#if (eq department "LGU Water District")}}selected{{/if}}>LGU Water District</option>
+                    <option value="EMB" {{#if (eq department "EMB")}}selected{{/if}}>EMB - Environmental Bureau</option>
+                </optgroup>
+                <optgroup label="Health &amp; Wellness">
+                    <option value="LGU Health Center" {{#if (eq department "LGU Health Center")}}selected{{/if}}>LGU Health Center</option>
+                    <option value="Philippine Red Cross" {{#if (eq department "Philippine Red Cross")}}selected{{/if}}>Philippine Red Cross</option>
+                </optgroup>
+                <optgroup label="Transportation &amp; Infrastructure">
+                    <option value="DPWH" {{#if (eq department "DPWH")}}selected{{/if}}>DPWH - Road Construction</option>
+                    <option value="LTO" {{#if (eq department "LTO")}}selected{{/if}}>LTO - Vehicle Registration</option>
+                    <option value="LTFRB" {{#if (eq department "LTFRB")}}selected{{/if}}>LTFRB - Transportation</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card s-pending">
+                <div class="stat-val">{{pendingCount}}</div>
+                <div class="stat-lbl">Pending</div>
+            </div>
+            <div class="stat-card s-progress">
+                <div class="stat-val">{{inProgressCount}}</div>
+                <div class="stat-lbl">In Progress</div>
+            </div>
+            <div class="stat-card s-resolved">
+                <div class="stat-val">{{resolvedCount}}</div>
+                <div class="stat-lbl">Resolved</div>
+            </div>
+        </div>
+
+        <!-- Reports table -->
+        <div class="table-card">
+            <div class="table-head">📋 Submitted Reports</div>
+            {{#if reports}}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Service Type</th>
+                        <th>Submitted</th>
+                        <th>Barangay</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each reports}}
+                    <tr>
+                        <td style="font-weight:600;color:var(--text-muted);">#{{this.id}}</td>
+                        <td style="font-weight:500;">{{this.serviceRequest.serviceType}}</td>
+                        <td><span class="ts-cell">{{formatDate this.createdAt}}</span></td>
+                        <td>{{this.serviceRequest.barangay}}</td>
+                        <td><div class="reason-cell" title="{{this.reason}}">{{this.reason}}</div></td>
+                        <td><span class="status-badge status-{{this.status}}">{{this.status}}</span></td>
+                        <td style="display:flex;gap:8px;align-items:center;">
+                            <select class="status-select" id="status-{{this.id}}">
+                                <option value="pending" {{#if (eq this.status "pending")}}selected{{/if}}>Pending</option>
+                                <option value="received" {{#if (eq this.status "received")}}selected{{/if}}>Received</option>
+                                <option value="in-progress" {{#if (eq this.status "in-progress")}}selected{{/if}}>In Progress</option>
+                                <option value="resolved" {{#if (eq this.status "resolved")}}selected{{/if}}>Resolved</option>
+                            </select>
+                            <button class="btn-update" onclick="updateStatus({{this.id}})">Update</button>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="no-reports">
+                <h3>📭 No Reports Yet</h3>
+                <p>No department reports have been submitted to {{department}} at this time.</p>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(reportId) {
+            var newStatus = document.getElementById('status-' + reportId).value;
+            fetch('/api/report-status/' + reportId, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(result) {
+                if (result.success) location.reload();
+                else alert('Failed to update status');
+            })
+            .catch(function(err) { alert('Error: ' + err.message); });
+        }
+
+        function changeDepartment() {
+            var selected = document.getElementById('deptSelect').value;
+            if (selected) window.location.href = '/department/' + selected;
+        }
+    </script>
+</body>
+</html>
