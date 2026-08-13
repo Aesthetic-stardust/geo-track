@@ -34,11 +34,12 @@ export const sequelize = new Sequelize(
     host: process.env.DB_HOST || "localhost",
     port: process.env.DB_PORT || 3306,
     dialect: "mysql",
-    dialectOptions: process.env.DB_SSL === "true" ? {
+    dialectOptions: {
       ssl: {
         require: true,
         rejectUnauthorized: false
       }
-    } : {}
+    },
+    logging: false
   }
 );
