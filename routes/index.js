@@ -98,4 +98,17 @@ router.get("/debug/session", (req, res) => {
   });
 });
 
+// Test route for API request without file
+router.post("/api/test-request", async (req, res) => {
+  try {
+    res.json({ 
+      session: req.session.user,
+      body: req.body,
+      message: "test ok"
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
